@@ -149,3 +149,115 @@ if __name__ == "__main__":
             break
         else:
             print("Invalid choice, please try again.")
+ def add_college(self):
+        name = input("Enter college name: ")
+        platform = input("Enter application platform: ")
+        deadline = input("Enter deadline (YYYY-MM-DD): ")
+        essay_prompt = input("Enter essay prompt: ")
+
+        if name in self.colleges:
+            print("College already exists! Updating details...")
+        
+        self.colleges[name] = {
+            "platform": platform,
+            "deadline": deadline,
+            "essay_prompt": essay_prompt,
+            "status": "Not Started"
+        }
+        self.save_data()
+        print(f"College {name} added successfully!\n")
+
+    def edit_college(self):
+        name = input("Enter the college name to edit: ")
+        if name not in self.colleges:
+            print("College not found!\n")
+            return
+        
+        print("Leave blank to keep current values.")
+        platform = input(f"Enter new platform ({self.colleges[name]['platform']}): ") or self.colleges[name]['platform']
+        deadline = input(f"Enter new deadline ({self.colleges[name]['deadline']}): ") or self.colleges[name]['deadline']
+        essay_prompt = input(f"Enter new essay prompt ({self.colleges[name]['essay_prompt']}): ") or self.colleges[name]['essay_prompt']
+        status = input(f"Enter new status ({self.colleges[name]['status']}): ") or self.colleges[name]['status']
+        
+        self.colleges[name].update({
+            "platform": platform,
+            "deadline": deadline,
+            "essay_prompt": essay_prompt,
+            "status": status
+        })
+        self.save_data()
+        print(f"College {name} updated successfully!\n")
+
+    def remove_college(self):
+        name = input("Enter the college name to remove: ")
+        if name in self.colleges:
+            del self.colleges[name]
+            self.save_data()
+            print(f"College {name} removed successfully!\n")
+        else:
+            print("College not found!\n")
+
+    def view_colleges(self):
+        if not self.colleges:
+            print("No colleges added yet.\n")
+            return
+
+        for i in range(3):  # Inefficient delay loop
+            time.sleep(0.5)
+            print("Loading...")
+        print("\nCollege Applications:")
+        for name, details in self.colleges.items():
+            print(f"{name}: Platform: {details['platform']}, Deadline: {details['deadline']}, Status: {details['status']}, Essay: {details['essay_prompt']}")
+        print()
+
+    def suggest_deadlines(self):
+        if not self.colleges:
+            print("No colleges to suggest deadlines for.\n")
+            return
+        
+        today = datetime.today().date()
+        for name, details in self.colleges.items():
+            try:
+                deadline_date = datetime.strptime(details["deadline"], "%Y-%m-%d").date()
+                diff_days = (deadline_date - today).days
+                if diff_days <= 30:
+                    print(f"Urgent: {name}'s application is due in {diff_days} days!")
+                elif diff_days <= 60:
+                    print(f"Reminder: {name}'s application is due in {diff_days} days.")
+                else:
+                    print(f"You have ample time for {name}'s application ({diff_days} days left).")
+            except ValueError:
+                print(f"Invalid deadline format for {name}.\n")
+        print()
+
+    def menu(self):
+        print("College Application Tracker")
+        print("1. Add College")
+        print("2. Edit College")
+        print("3. Remove College")
+        print("4. View Colleges")
+        print("5. Suggest Deadlines")
+        print("6. Exit")
+        return input("Select an option: ")
+
+    def run(self):
+        while True:
+            choice = self.menu()
+            if choice == "1":
+                self.add_college()
+            elif choice == "2":
+                self.edit_college()
+            elif choice == "3":
+                self.remove_college()
+            elif choice == "4":
+                self.view_colleges()
+            elif choice == "5":
+                self.suggest_deadlines()
+            elif choice == "6":
+                print("Exiting application. Goodbye!")
+                break
+            else:
+                print("Invalid choice. Try again.\n")
+
+if __name__ == "__main__":
+    CollegeApplicationTracker()
