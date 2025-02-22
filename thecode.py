@@ -261,3 +261,85 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     CollegeApplicationTracker()
+
+# File for storing application data
+data_file = "college_data.json"
+
+def load_data():
+    if os.path.exists(data_file):
+        with open(data_file, "r") as file:
+            return json.load(file)
+    return {"applications": [], "settings": {"dark_mode": False, "notifications": True}}
+
+def save_data(data):
+    with open(data_file, "w") as file:
+        json.dump(data, file, indent=4)
+
+data = load_data()
+
+class CollegeTrackerApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("College Application Tracker")
+        self.root.geometry("600x400")
+        self.dark_mode = data["settings"].get("dark_mode", False)
+        self.setup_ui()
+    
+    def setup_ui(self):
+        self.toggle_theme_button = tk.Button(self.root, text="Toggle Dark Mode", command=self.toggle_dark_mode)
+        self.toggle_theme_button.pack()
+        
+        self.reminder_button = tk.Button(self.root, text="Check Deadlines", command=self.check_deadlines)
+        self.reminder_button.pack()
+        
+        self.search_entry = tk.Entry(self.root)
+        self.search_entry.pack()
+        self.search_button = tk.Button(self.root, text="Search Colleges", command=self.search_college)
+        self.search_button.pack()
+        
+        self.tree = ttk.Treeview(self.root, columns=("College", "Deadline", "Status"), show='headings')
+        self.tree.heading("College", text="College")
+        self.tree.heading("Deadline", text="Deadline")
+        self.tree.heading("Status", text="Status")
+        self.tree.pack(fill=tk.BOTH, expand=True)
+        
+        self.load_colleges()
+
+    def toggle_dark_mode(self):
+        self.dark_mode = not self.dark_mode
+        data["settings"]["dark_mode"] = self.dark_mode
+        save_data(data)
+        bg_color = "black" if self.dark_mode else "white"
+        fg_color = "white" if self.dark_mode else "black"
+        self.root.configure(bg=bg_color)
+        self.toggle_theme_button.configure(bg=bg_color, fg=fg_color)
+        messagebox.showinfo("Theme Updated", "Dark Mode " + ("Enabled" if self.dark_mode else "Disabled"))
+    
+    def check_deadlines(self):
+        today = datetime.date.today()
+        upcoming_deadlines = []
+        for app in data["applications"]:
+            deadline = datetime.datetime.strptime(app["deadline"], "%Y-%m-%d").date()
+            if deadline - today <= datetime.timedelta(days=7):
+                upcoming_deadlines.append(f"{app['college']} - {app['deadline']}")
+        if upcoming_deadlines:
+            messagebox.showwarning("Upcoming Deadlines", "\n".join(upcoming_deadlines))
+        else:
+            messagebox.showinfo("No Urgent Deadlines", "You're on track!")
+
+    def search_college(self):
+        query = self.search_entry.get().lower()
+        self.tree.delete(*self.tree.get_children())
+        for app in data["applications"]:
+            if query in app["college"].lower():
+                self.tree.insert("", tk.END, values=(app["college"], app["deadline"], app["status"]))
+    
+    def load_colleges(self):
+        self.tree.delete(*self.tree.get_children())
+        for app in data["applications"]:
+            self.tree.insert("", tk.END, values=(app["college"], app["deadline"], app["status"]))
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CollegeTrackerApp(root)
+    root.mainloop()
